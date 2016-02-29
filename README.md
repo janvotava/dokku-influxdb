@@ -46,6 +46,9 @@ dokku influxdb:link lolipop playground
 dokku influxdb:logs lolipop
 dokku influxdb:logs lolipop -t # to tail
 
+# expose docker port to the host machine
+dokku influxdb:expose lolipop 8086 8083
+
 # finally, you can destroy the container
 dokku influxdb:destroy lolipop
 ```
