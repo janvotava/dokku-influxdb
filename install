@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$(dirname "$0")/config"
+
+docker pull $INFLUXDB_IMAGE
+
+mkdir -p "$INFLUXDB_ROOT" || echo "Failed to create InfluxDB directory"
+chown dokku:dokku "$INFLUXDB_ROOT"

@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$(dirname "$0")/config"
+source "$(dirname "$0")/functions"
+
+if [[ $1 == influxdb:* ]]; then
+  if [[ ! -d $INFLUXDB_ROOT ]]; then
+    dokku_log_fail "influxdb: Please run: sudo dokku plugin:install"
+  fi
+fi
+
+if [[ -d "$INFLUXDB_ROOT/*" ]]; then
+  rm -rf "$INFLUXDB_ROOT/*"
+fi
+
+case "$1" in
+
+  influxdb:create)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    [[ ! -d "$INFLUXDB_ROOT/$2" ]] || dokku_log_fail "influxdb service $2 already exists"
+    SERVICE="$2"; SERVICE_ROOT="$INFLUXDB_ROOT/$SERVICE"; LINKS_FILE="$INFLUXDB_ROOT/LINKS"
+
+    if ! docker images | grep -e "^$INFLUXDB_IMAGE "; then
+      dokku_log_fail "influxdb image not found"
+    fi
+
+    mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
+    touch "$LINKS_FILE"
+
+    dokku_log_info1 "Starting container"
+    echo "" > "$SERVICE_ROOT/ENV"
+    SERVICE_NAME=$(get_service_name "$SERVICE")
+    ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT/data:/var/lib/influxdb" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=influxdb "$INFLUXDB_IMAGE")
+    echo "$ID" > "$SERVICE_ROOT/ID"
+
+    dokku_log_info2 "influxdb container created: $SERVICE"
+    ;;
+
+  influxdb:destroy)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    SERVICE="$2"; SERVICE_ROOT="$INFLUXDB_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
+    SERVICE_NAME=$(get_service_name "$SERVICE")
+
+    [[ -s "$LINKS_FILE" ]] && dokku_log_fail "Cannot delete linked service"
+
+    [[ "$3" == "force" ]] && DOKKU_APPS_FORCE_DELETE=1
+    if [[ -z "$DOKKU_APPS_FORCE_DELETE" ]]; then
+      dokku_log_warn "WARNING: Potentially Destructive Action"
+      dokku_log_warn "This command will destroy $SERVICE influxdb service."
+      dokku_log_warn "To proceed, type \"$SERVICE\""
+      echo ""
+
+      read -p "> " service_name
+      if [[ "$service_name" != "$SERVICE" ]]; then
+        dokku_log_warn "Confirmation did not match $SERVICE. Aborted."
+        exit 1
+      fi
+    fi
+
+    dokku_log_info1 "Deleting $SERVICE"
+    if [[ -n $(docker ps -aq -f name="$SERVICE_NAME") ]]; then
+      service_stop "$SERVICE"
+      sleep 1
+
+      dokku_log_verbose_quiet "Removing container"
+      docker rm -v "$SERVICE_NAME" > /dev/null
+      sleep 1
+    else
+      dokku_log_verbose_quiet "No container exists for $SERVICE"
+    fi
+
+    dokku_log_verbose_quiet "Removing data"
+    rm -rf "$SERVICE_ROOT"
+
+    dokku_log_info2 "influxdb container deleted: $SERVICE"
+    ;;
+
+  influxdb:start)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_start "$2"
+    ;;
+
+  influxdb:stop)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_stop "$2"
+    ;;
+
+  influxdb:restart)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_stop "$2"
+    service_start "$2"
+    dokku_log_info1 "Please call dokku ps:restart on all linked apps"
+    ;;
+
+  influxdb:link)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
+    verify_app_name "$3"
+    verify_service_name "$2"
+    service_link "$2" "$3"
+    ;;
+
+  influxdb:unlink)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
+    verify_app_name "$3"
+    verify_service_name "$2"
+    service_unlink "$2" "$3"
+    ;;
+
+  influxdb:expose)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_port_expose "$2" "${@:3}"
+    ;;
+
+  influxdb:unexpose)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_port_unexpose "$2"
+    ;;
+
+  influxdb:logs)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_logs "$2" "$3"
+    ;;
+
+
+  help | influxdb:help)
+    cat && cat<<EOF
+    influxdb:create <name>, Create new influxdb container
+    influxdb:destroy <name>, Destroy influxdb container
+    influxdb:start <name>, Start a previously stopped influxdb service
+    influxdb:stop <name>, Stop a running influxdb service
+    influxdb:restart <name>, Graceful shutdown and restart of the influxdb service container
+    influxdb:link <name> <app>, Link influxdb service to the app
+    influxdb:unlink <name> <app>, Unlink influxdb service from the app
+    influxdb:expose <name> [port], Expose on a custom port if provided (random port otherwise)
+    influxdb:unexpose <name>, Unexpose a previously exposed influxdb service
+    influxdb:logs <name> [-t], Print the most recent log(s) for this service
+EOF
+    ;;
+
+  *)
+    exit $DOKKU_NOT_IMPLEMENTED_EXIT
+    ;;
+
+esac
