@@ -133,7 +133,7 @@ case "$1" in
 
 
   help | influxdb:help)
-    cat && cat<<EOF
+    cat<<EOF
     influxdb:create <name>, Create new influxdb container
     influxdb:destroy <name>, Destroy influxdb container
     influxdb:start <name>, Start a previously stopped influxdb service
