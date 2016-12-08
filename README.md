@@ -5,7 +5,6 @@ InfluxDB plugin for dokku.
 ## disclaimer
 
   - This plugin is not production ready yet.
-  - The docker image is not from Influxdata (tutum/influxdb)
 
 ## requirements
 
@@ -15,7 +14,7 @@ InfluxDB plugin for dokku.
 
 ```shell
 # on 0.4.x
-dokku plugin:install https://github.com/basgys/dokku-influxdb.git influxdb
+dokku plugin:install https://github.com/bytesmith/dokku-influxdb.git influxdb
 ```
 
 ## commands
