@@ -14,7 +14,7 @@ InfluxDB plugin for dokku.
 
 ```shell
 # on 0.4.x
-dokku plugin:install https://github.com/bytesmith/dokku-influxdb.git influxdb
+dokku plugin:install https://github.com/IMcD23/dokku-influxdb.git influxdb
 ```
 
 ## commands
