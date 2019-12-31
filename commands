@@ -150,6 +150,7 @@ EOF
       cat<<help_desc
     influxdb, Plugin for managing InfluxDB services
 help_desc
+    fi
     ;;
 
   *)
