@@ -133,7 +133,8 @@ case "$1" in
 
 
   help | influxdb:help)
-    cat<<EOF
+    if [[ $1 = "influxdb:help" ]]; then
+      cat<<EOF
     influxdb:create <name>, Create new influxdb container
     influxdb:destroy <name>, Destroy influxdb container
     influxdb:start <name>, Start a previously stopped influxdb service
@@ -145,6 +146,10 @@ case "$1" in
     influxdb:unexpose <name>, Unexpose a previously exposed influxdb service
     influxdb:logs <name> [-t], Print the most recent log(s) for this service
 EOF
+    else
+      cat<<help_desc
+    influxdb, Plugin for managing InfluxDB services
+help_desc
     ;;
 
   *)
