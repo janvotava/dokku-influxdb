@@ -23,6 +23,7 @@ dokku plugin:install https://github.com/IMcD23/dokku-influxdb.git influxdb
 influxdb:create <name>         Create new InfluxDB container
 influxdb:destroy <name>        Destroy InfluxDB container
 influxdb:expose <name> [port]  Expose on a custom port if provided (random port otherwise)
+influxdb:exists <name>         Check if service exists
 influxdb:link <name> <app>     Link InfluxDB service to the app
 influxdb:logs <name> [-t]      Print the most recent log(s) for this service
 influxdb:restart <name>        Graceful shutdown and restart of the InfluxDB service container

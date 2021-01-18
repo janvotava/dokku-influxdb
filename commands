@@ -130,6 +130,9 @@ case "$1" in
     verify_service_name "$2"
     service_logs "$2" "$3"
     ;;
+  influxdb:exists)
+    verify_service_name "$2"
+    ;;
 
 
   help | influxdb:help)
@@ -142,6 +145,7 @@ case "$1" in
     influxdb:restart <name>, Graceful shutdown and restart of the influxdb service container
     influxdb:link <name> <app>, Link influxdb service to the app
     influxdb:unlink <name> <app>, Unlink influxdb service from the app
+    influxdb:exists <name>, Check if service exists
     influxdb:expose <name> [port], Expose on a custom port if provided (random port otherwise)
     influxdb:unexpose <name>, Unexpose a previously exposed influxdb service
     influxdb:logs <name> [-t], Print the most recent log(s) for this service
