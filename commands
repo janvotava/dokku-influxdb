@@ -97,6 +97,14 @@ case "$1" in
     dokku_log_info1 "Please call dokku ps:restart on all linked apps"
     ;;
 
+  influxdb:linked)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
+    verify_app_name "$3"
+    verify_service_name "$2"
+    verify_is_linked "$2" "$3"
+    ;;
+
   influxdb:link)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
@@ -145,6 +153,7 @@ case "$1" in
     influxdb:restart <name>, Graceful shutdown and restart of the influxdb service container
     influxdb:link <name> <app>, Link influxdb service to the app
     influxdb:unlink <name> <app>, Unlink influxdb service from the app
+    influxdb:linked <name> <app>, Check if service is already linked to an app
     influxdb:exists <name>, Check if service exists
     influxdb:expose <name> [port], Expose on a custom port if provided (random port otherwise)
     influxdb:unexpose <name>, Unexpose a previously exposed influxdb service
